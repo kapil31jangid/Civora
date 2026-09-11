@@ -28,12 +28,12 @@ export function createApp() {
   // /chat is intentionally public for Arena evaluation. Conversation routes
   // remain restricted to configured browser origins; server-to-server calls
   // without an Origin header continue to work.
-  app.use('/chat', cors({ origin: true, methods: ['POST', 'OPTIONS'], allowedHeaders: ['Content-Type'] }))
-  app.use('/conversations', privateCors)
+  app.use(['/chat', '/api/chat'], cors({ origin: true, methods: ['POST', 'OPTIONS'], allowedHeaders: ['Content-Type'] }))
+  app.use(['/conversations', '/api/conversations'], privateCors)
   app.use(express.json({ limit: '32kb' }))
-  app.get('/health', (_req, res) => res.json({ status: 'ok' }))
-  app.use('/chat', chatRouter)
-  app.use('/conversations', conversationsRouter)
+  app.get(['/health', '/api/health', '/api'], (_req, res) => res.json({ status: 'ok' }))
+  app.use(['/chat', '/api/chat'], chatRouter)
+  app.use(['/conversations', '/api/conversations'], conversationsRouter)
   app.use((_req, res) => res.status(404).json({ error: 'Route not found.' }))
   app.use(errorHandler)
   return app
