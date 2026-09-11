@@ -1,7 +1,7 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import * as Toast from '@radix-ui/react-toast'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { AlertTriangle, ChevronDown, Menu, Plus, RefreshCw, ShieldCheck, WifiOff } from 'lucide-react'
+import { AlertTriangle, ChevronDown, Menu, Plus, RefreshCw, ShieldCheck } from 'lucide-react'
 import { getClientId } from './lib/clientId'
 import { useConversations, LOCAL_SESSION_ID } from './hooks/useConversations'
 import { useChat } from './hooks/useChat'
@@ -12,7 +12,7 @@ import { EmptyState } from './components/chat/EmptyState'
 import { Composer } from './components/chat/Composer'
 import { ConversationDialogs } from './components/sidebar/ConversationDialogs'
 import { Button } from './components/ui/Button'
-import { api, isProdMisconfigured } from './lib/api'
+import { isProdMisconfigured } from './lib/api'
 import { cn } from './lib/utils'
 
 const modeCommand = /^\/(auto|mobility|waste|pollution|spaces|water)\s*$/i
@@ -32,21 +32,8 @@ export default function App() {
   const [deleteTarget, setDeleteTarget] = useState<Conversation | null>(null)
   const [toast, setToast] = useState('')
   const [focusKey, setFocusKey] = useState<string | null>(null)
-  const [serverDown, setServerDown] = useState(false)
-  const [serverChecked, setServerChecked] = useState(false)
   // Local mode overrides for mode switching when in fallback (not persisted)
   const [localMode, setLocalMode] = useState<Mode>('auto')
-
-  const checkServer = () => {
-    if (isProdMisconfigured) { setServerChecked(true); return }
-    api.healthCheck()
-      .then(() => { setServerDown(false); setServerChecked(true) })
-      .catch(() => { setServerDown(true); setServerChecked(true) })
-  }
-
-  useEffect(() => {
-    checkServer()
-  }, [])
 
   const notify = (message: string) => { setToast(''); requestAnimationFrame(() => setToast(message)) }
 
@@ -228,24 +215,6 @@ export default function App() {
               className="flex shrink-0 items-center gap-1 rounded-lg border border-amber-300 bg-amber-100 px-2 py-1 font-semibold transition-all hover:bg-amber-200 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
               aria-label="Retry loading chat history"
             ><RefreshCw aria-hidden className="h-3 w-3" />Retry</button>
-          </div>
-        )}
-
-        {/* Server down banner */}
-        {serverChecked && serverDown && !persistenceWarning && (
-          <div role="alert" className="flex items-center justify-between gap-3 border-b border-red-200 bg-red-50 px-4 py-2 text-xs text-red-800">
-            <span className="flex items-center gap-2">
-              <WifiOff aria-hidden className="h-3.5 w-3.5 shrink-0" />
-              Civora cannot reach the server right now. Check your connection or API status.
-            </span>
-            <button
-              onClick={() => checkServer()}
-              className="flex shrink-0 items-center gap-1 rounded-lg border border-red-300 bg-red-100 px-2.5 py-1 font-semibold transition-all hover:bg-red-200 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
-              aria-label="Retry server connection"
-            >
-              <RefreshCw aria-hidden className="h-3 w-3" />
-              Retry
-            </button>
           </div>
         )}
 

@@ -6,6 +6,7 @@ import { getStore } from '../services/store.js'
 import { asyncRoute, HttpError } from '../utils/http.js'
 import { parseCommand } from '../utils/commands.js'
 import { createTitle } from '../utils/title.js'
+import { detectMessageDomain, buildModeRedirect } from '../utils/domainGuard.js'
 
 const router = Router()
 const schema = z.object({
@@ -23,6 +24,17 @@ router.post('/', asyncRoute(async (req, res) => {
   if (!input.conversationId || !input.clientId) {
     const parsed = parseCommand(input.message, input.mode ?? 'auto')
     if (!parsed.message) throw new HttpError(400, 'Please include a city problem after the mode command.')
+
+    // Domain guard — only enforce in specific (non-auto) modes
+    if (parsed.mode !== 'auto') {
+      const detected = detectMessageDomain(parsed.message)
+      const redirect = detected ? buildModeRedirect(detected, parsed.mode) : null
+      if (redirect) {
+        res.json({ response: redirect, mode: parsed.mode, modeRedirect: detected })
+        return
+      }
+    }
+
     const response = await generateResponse({ message: parsed.message, mode: parsed.mode, action: parsed.action })
     res.json({ response, mode: parsed.mode })
     return
@@ -38,6 +50,19 @@ router.post('/', asyncRoute(async (req, res) => {
   if (!parsed.message) {
     res.json({ response: `${modeName(parsed.mode)} specialist activated. Describe the urban issue you want to work on.`, mode: parsed.mode, modeChanged: true })
     return
+  }
+
+  // Domain guard for stateful conversations — only enforce in specific (non-auto) modes
+  if (parsed.mode !== 'auto') {
+    const detected = detectMessageDomain(parsed.message)
+    const redirect = detected ? buildModeRedirect(detected, parsed.mode) : null
+    if (redirect) {
+      // Still persist the user message so history is coherent, but return the redirect
+      await store.addMessage(conversation.id, input.clientId, 'user', input.message)
+      await store.addMessage(conversation.id, input.clientId, 'assistant', redirect)
+      res.json({ response: redirect, mode: parsed.mode, modeRedirect: detected })
+      return
+    }
   }
 
   let history = await store.listMessages(conversation.id, input.clientId, 10)
@@ -72,3 +97,4 @@ function extendSummary(existing: string | null, messages: Array<{ role: string; 
 }
 
 export default router
+
