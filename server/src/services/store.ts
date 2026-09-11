@@ -111,10 +111,15 @@ let singleton: Store | undefined
 
 export function getStore(): Store {
   if (singleton) return singleton
-  const url = process.env.SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  singleton = url && key
-    ? new SupabaseStore(createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } }))
+  const url = process.env.SUPABASE_URL?.trim()
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
+  const isKeyValid = Boolean(key && key.length > 20 && !key.startsWith('http'))
+  singleton = url && isKeyValid
+    ? new SupabaseStore(createClient(url, key!, { auth: { persistSession: false, autoRefreshToken: false } }))
     : new MemoryStore()
   return singleton
+}
+
+export function resetStore(): void {
+  singleton = undefined
 }
