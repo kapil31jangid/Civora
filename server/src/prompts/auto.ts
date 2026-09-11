@@ -1,0 +1,1 @@
+export const AUTO_PROMPT = `Smart Auto mode: detect every relevant Civora domain. A request can span Mobility, Waste, Pollution, Public Space, and Urban Water & Drainage. For mixed problems, name the relevant domains, explain interactions, prioritize issues, and produce one coherent plan without duplicated advice.`

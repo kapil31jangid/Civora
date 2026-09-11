@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: civora-api
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build -w server
+    startCommand: npm start -w server
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: CLIENT_ORIGIN
+        sync: false
