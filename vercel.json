@@ -1,0 +1,32 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "client/dist",
+  "rewrites": [
+    {
+      "source": "/chat",
+      "destination": "/api"
+    },
+    {
+      "source": "/chat/(.*)",
+      "destination": "/api"
+    },
+    {
+      "source": "/conversations",
+      "destination": "/api"
+    },
+    {
+      "source": "/conversations/(.*)",
+      "destination": "/api"
+    },
+    {
+      "source": "/health",
+      "destination": "/api"
+    },
+    {
+      "source": "/((?!chat|conversations|health).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

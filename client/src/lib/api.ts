@@ -9,14 +9,15 @@ function resolveBaseUrl(): string {
   const configured = import.meta.env.VITE_API_URL as string | undefined
   if (configured) return configured.replace(/\/$/, '')
   if (import.meta.env.PROD) {
-    // Return a sentinel so callers can detect the misconfiguration
-    return '__UNCONFIGURED__'
+    // In production on unified deployment (e.g. Vercel), use relative paths to the same domain
+    return ''
   }
   return 'http://localhost:3001'
 }
 
 export const baseUrl = resolveBaseUrl()
-export const isProdMisconfigured = baseUrl === '__UNCONFIGURED__'
+export const isProdMisconfigured = false
+
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   if (isProdMisconfigured) {
