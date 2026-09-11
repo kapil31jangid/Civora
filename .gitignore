@@ -10,3 +10,7 @@ dist/
 .vite/
 coverage/
 
+# Generated TypeScript / Vite build artifacts — do not commit these
+*.tsbuildinfo
+client/vite.config.js
+client/vite.config.d.ts

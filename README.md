@@ -152,9 +152,70 @@ Optional frontend fields are `conversationId`, `clientId`, and `mode`. If conver
 | `DELETE` | `/conversations/:id?clientId=...` | Delete a conversation and its messages |
 | `GET` | `/conversations/:id/messages?clientId=...` | Read messages |
 
+## Operating modes
+
+### Stateless mode (Gemini only)
+
+Requires only `GEMINI_API_KEY`. Supports `POST /chat`, the core chatbot, and Arena evaluator requests. Conversations are not persisted and the UI shows a warning banner. This mode is fully functional for evaluation.
+
+```bash
+# Minimal server/.env for stateless mode
+GEMINI_API_KEY=your_key_here
+```
+
+### Persistent mode (Gemini + Supabase)
+
+Requires `GEMINI_API_KEY` plus the two Supabase variables. Adds full chat history, multiple browser-scoped conversations, rename/delete, and saved specialist modes. The UI seamlessly falls back to stateless mode when persistence is temporarily unavailable.
+
 ## Deployment
 
-Deploy `client` to Vercel with `VITE_API_URL` set to the public backend URL. Deploy the repository to Render or Railway using `npm install`, `npm run build -w server`, and `npm start -w server`. Set all server variables there and set `CLIENT_ORIGIN` to the Vercel URL. Verify both `/health` and a stateless `/chat` request from outside localhost.
+### Frontend — Vercel
+
+1. Connect the repository; set **Root Directory** to `client`.
+2. Build command: `npm run build`
+3. Output directory: `dist`
+4. Add environment variable: `VITE_API_URL=https://your-backend.onrender.com`
+
+> **Important:** `VITE_API_URL` is injected at build time. Redeploy the frontend whenever you change it.
+
+### Backend — Render
+
+1. Build command: `npm install && npm run build -w server`
+2. Start command: `npm start -w server`
+3. Health check path: `/health`
+4. Set all environment variables in the Render dashboard:
+
+| Variable | Required | Notes |
+|---|---|---|
+| `GEMINI_API_KEY` | **Yes** | Without this chatbot returns 503 |
+| `GEMINI_MODEL` | No | Defaults to `gemini-2.5-flash` |
+| `SUPABASE_URL` | No | Omit for stateless/in-memory mode |
+| `SUPABASE_SERVICE_ROLE_KEY` | No | Omit for stateless/in-memory mode |
+| `CLIENT_ORIGIN` | Yes | Comma-separated Vercel URL(s) |
+| `PORT` | No | Render sets this automatically |
+
+After deploying both services, verify:
+
+```bash
+curl https://your-backend.onrender.com/health
+# Expected: {"status":"ok"}
+
+curl -X POST https://your-backend.onrender.com/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message":"How can a neighborhood reduce traffic?"}'
+# Expected: {"response":"..."}
+```
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Composer loads but Civora shows amber warning banner | `/conversations` or Supabase is unreachable | Check backend logs; chat still works in stateless mode. Use Retry button. |
+| Red "cannot reach the server" banner | Backend is down or VITE_API_URL is wrong | Verify `/health` is reachable; check Render deployment |
+| UI shows "Civora API not configured" | `VITE_API_URL` missing in production Vercel build | Set env var in Vercel dashboard and redeploy frontend |
+| POST /chat returns 503 | `GEMINI_API_KEY` not set on backend | Add it in Render environment variables |
+| POST /chat returns 502 | Gemini API error or timeout | Check API key validity; try again |
+| CORS error in browser console on `/conversations` | `CLIENT_ORIGIN` not set or wrong URL | Set `CLIENT_ORIGIN=https://your-app.vercel.app` on Render |
 
 ## Competition compliance
 

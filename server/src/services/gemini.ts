@@ -34,8 +34,11 @@ export async function generateResponse({ message, mode, action, summary, history
     const text = result.text?.trim()
     if (!text) throw new Error('Empty model response')
     return text
-  } catch {
-    throw new HttpError(502, 'Civora couldn’t generate a response right now. Please try again.')
+  } catch (err) {
+    // Re-throw known HTTP errors (e.g. 503 for missing API key) unchanged so
+    // the error handler surfaces the correct status code to the client.
+    if (err instanceof HttpError) throw err
+    throw new HttpError(502, 'Civora couldn\u2019t generate a response right now. Please try again.')
   } finally {
     if (timer) clearTimeout(timer)
   }
