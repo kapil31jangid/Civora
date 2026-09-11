@@ -75,11 +75,11 @@ Requirements: Node.js 20 or newer, a Gemini API key, and optionally a Supabase p
 
 ```bash
 npm install
-cp .env.example server/.env
-printf 'VITE_API_URL=http://localhost:3001\n' > client/.env
+cp server/.env.example server/.env
+cp client/.env.example client/.env
 ```
 
-Fill in `server/.env`. Do not commit it.
+Fill in `server/.env`. The client file contains only the public API URL. Do not commit either runtime `.env` file.
 
 ### Environment variables
 
